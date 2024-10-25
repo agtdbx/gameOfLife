@@ -3,8 +3,10 @@ import time
 import sys
 
 from pygame.math import Vector2 as vec2
-from define import WIN_W, WIN_H
-from grid import Grid
+from define import  WIN_W, WIN_H,\
+                    MIN_SIMULATION_SLEEP, MAX_SIMULATION_SLEEP, START_SIMULATION_SLEEP,\
+                    SIMULATION_SPEED
+from grid import    Grid
 
 class Game:
     def __init__(self):
@@ -29,6 +31,11 @@ class Game:
         self.runMainLoop = True
 
         self.grid = Grid()
+        self.runSimulation = False
+        self.simulationSleep = START_SIMULATION_SLEEP
+        self.simulationSleepRemain = 0
+
+        self.waitSimulationSpeedChange = 0
 
 
     def run(self):
@@ -99,13 +106,13 @@ class Game:
             self.grid.switchDrawTileBorder()
 
         # Camera movement
-        if self.keyboardState[pg.K_UP]:
+        if self.keyboardState[pg.K_w] or self.keyboardState[pg.K_z]:
             self.grid.moveOffset('u')
-        elif self.keyboardState[pg.K_DOWN]:
+        elif self.keyboardState[pg.K_s]:
             self.grid.moveOffset('d')
-        if self.keyboardState[pg.K_LEFT]:
+        if self.keyboardState[pg.K_a] or self.keyboardState[pg.K_q]:
             self.grid.moveOffset('l')
-        elif self.keyboardState[pg.K_RIGHT]:
+        elif self.keyboardState[pg.K_d]:
             self.grid.moveOffset('r')
 
         # Change tile status
@@ -115,8 +122,46 @@ class Game:
         elif self.mouseState[2]:
             self.grid.handleMouseClick(self.mousePos, 0)
 
-        if self.keyboardState[pg.K_SPACE]:
+        if self.keyboardState[pg.K_c]:
             self.grid.clear()
+
+        # Change simulation run status
+        if pg.K_SPACE in self.keyDown:
+            self.runSimulation = not self.runSimulation
+
+        # Change simulation speed
+        if self.waitSimulationSpeedChange <= 0:
+            if self.keyboardState[pg.K_LEFT]: # decrease simulation speed
+                self.simulationSleep = min(MAX_SIMULATION_SLEEP,
+                                        self.simulationSleep + SIMULATION_SPEED)
+                self.waitSimulationSpeedChange = 0.2
+
+            elif self.keyboardState[pg.K_RIGHT]: # increase simulation speed
+                self.simulationSleep = max(MIN_SIMULATION_SLEEP,
+                                        self.simulationSleep - SIMULATION_SPEED)
+                self.waitSimulationSpeedChange = 0.2
+
+            if self.keyboardState[pg.K_UP]: # set simulation speed to max
+                self.simulationSleep = MIN_SIMULATION_SLEEP
+                self.waitSimulationSpeedChange = 0.2
+
+            if self.keyboardState[pg.K_DOWN]: # set simulation speed to min
+                self.simulationSleep = MAX_SIMULATION_SLEEP
+                self.waitSimulationSpeedChange = 0.2
+        else:
+            self.waitSimulationSpeedChange -= delta
+
+        # Make simulation run
+        if self.runSimulation:
+            if self.simulationSleepRemain <= 0:
+                self.grid.simulateStep()
+                self.simulationSleepRemain = self.simulationSleep
+            else:
+                self.simulationSleepRemain -= delta
+
+        # Make simulation step
+        elif pg.K_RCTRL in self.keyDown:
+            self.grid.simulateStep()
 
         pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
 
@@ -148,11 +193,17 @@ print("COMMANDS :")
 print(" - mouse wheel UP -> zoom in grid")
 print(" - mouse wheel DOWN -> zoom out grid")
 print(" - key B -> enable / disable drawing of tiles' border")
-print(" - key UP -> move grid down")
-print(" - key DOWN -> move grid up")
-print(" - key LEFT -> move grid right")
-print(" - key RIGHT -> move grid left")
-print(" - key SPACE -> clear grid")
+print(" - key W/Z -> move grid down")
+print(" - key S -> move grid up")
+print(" - key A/Q -> move grid right")
+print(" - key D -> move grid left")
+print(" - key C -> clear grid")
+print(" - key SPACE -> start/stop simulation")
+print(" - key LEFT -> increase simulation speed")
+print(" - key RIGHT -> decrease simulation speed")
+print(" - key UP -> set simulation speed to max")
+print(" - key DOWN -> set simulation speed to min")
+print(" - key S -> simulation step")
 
 
 Game().run() # Start game

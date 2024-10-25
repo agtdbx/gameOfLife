@@ -2,8 +2,8 @@ import pygame as pg
 
 from pygame.math import Vector2 as vec2
 from define import  NB_W_TILE, NB_H_TILE,\
-                    MIN_TILE_SIZE, START_TILE_SIZE, MAX_TILE_SIZE,\
-                    TILE_FILL_COLOR, TILE_EMPTY_COLOR, \
+                    MIN_TILE_SIZE, START_TILE_SIZE, MAX_TILE_SIZE, ZOOM_SPEED,\
+                    TILE_FILL_COLOR, TILE_EMPTY_COLOR, CAMERA_SPEED,\
                     WIN_W, WIN_H
 
 class    Grid:
@@ -25,24 +25,24 @@ class    Grid:
 
     def moveOffset(self, dir: str):
         if dir == 'u':
-            self.offsetY -= 1
+            self.offsetY -= CAMERA_SPEED
         elif dir == 'd':
-            self.offsetY += 1
+            self.offsetY += CAMERA_SPEED
         elif dir == 'l':
-            self.offsetX -= 1
+            self.offsetX -= CAMERA_SPEED
         elif dir == 'r':
-            self.offsetX += 1
+            self.offsetX += CAMERA_SPEED
 
         self.offsetX %= NB_W_TILE
         self.offsetY %= NB_H_TILE
 
 
     def zoomIn(self):
-        self.tileSize = max(MIN_TILE_SIZE, self.tileSize - 5)
+        self.tileSize = max(MIN_TILE_SIZE, self.tileSize - ZOOM_SPEED)
 
 
     def zoomOut(self):
-        self.tileSize = min(MAX_TILE_SIZE, self.tileSize + 5)
+        self.tileSize = min(MAX_TILE_SIZE, self.tileSize + ZOOM_SPEED)
 
 
     def switchDrawTileBorder(self):
@@ -93,3 +93,41 @@ class    Grid:
 
             if drawY > WIN_H:
                 break
+
+
+    def simulateStep(self):
+        changes = []
+
+        # Detect changes
+        for y in range(NB_H_TILE):
+            pY = (y - 1) % NB_H_TILE # previous y
+            nY = (y + 1) % NB_H_TILE # next y
+
+            for x in range(NB_W_TILE):
+                pX = (x - 1) % NB_W_TILE # previous x
+                nX = (x + 1) % NB_W_TILE # next x
+
+                # Get number of tile fill in neighborhood
+                neighborsValue = 0
+                neighborsValue += self.tiles[pY][pX]
+                neighborsValue += self.tiles[pY][x]
+                neighborsValue += self.tiles[pY][nX]
+                neighborsValue += self.tiles[y][pX]
+                neighborsValue += self.tiles[y][nX]
+                neighborsValue += self.tiles[nY][pX]
+                neighborsValue += self.tiles[nY][x]
+                neighborsValue += self.tiles[nY][nX]
+
+                tileStatus = self.tiles[y][x]
+
+                # If an empty tile is have 3 fill tile around, make it fill
+                if tileStatus == 0 and neighborsValue == 3:
+                    changes.append((x, y, 1)) # add the change
+
+                # If an fill tile is haven't 2 or 3 fill tile around, make it empty
+                if tileStatus == 1 and neighborsValue != 2 and neighborsValue != 3:
+                    changes.append((x, y, 0)) # add the change
+
+        # Apply changes
+        for x, y, value in changes:
+            self.tiles[y][x] = value
