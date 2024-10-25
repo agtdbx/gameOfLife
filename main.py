@@ -110,15 +110,13 @@ class Game:
 
         # Change tile status
         if self.mouseState[0]:
-            tileX = self.mousePos[0] // self.grid.tileSize
-            tileY = self.mousePos[1] // self.grid.tileSize
-            self.grid.set(tileX, tileY, 1)
+            self.grid.handleMouseClick(self.mousePos, 1)
 
         elif self.mouseState[2]:
-            tileX = self.mousePos[0] // self.grid.tileSize
-            tileY = self.mousePos[1] // self.grid.tileSize
-            self.grid.set(tileX, tileY, 0)
+            self.grid.handleMouseClick(self.mousePos, 0)
 
+        if self.keyboardState[pg.K_SPACE]:
+            self.grid.clear()
 
         pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
 
@@ -154,6 +152,7 @@ print(" - key UP -> move grid down")
 print(" - key DOWN -> move grid up")
 print(" - key LEFT -> move grid right")
 print(" - key RIGHT -> move grid left")
+print(" - key SPACE -> clear grid")
 
 
 Game().run() # Start game

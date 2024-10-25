@@ -8,9 +8,7 @@ from define import  NB_W_TILE, NB_H_TILE,\
 
 class    Grid:
     def __init__(self) -> None:
-        self.tiles = []
-        for _ in range(NB_H_TILE):
-            self.tiles.append([0] * NB_W_TILE)
+        self.clear()
 
         self.drawTileBorder = True
         self.tileSize = START_TILE_SIZE
@@ -19,15 +17,21 @@ class    Grid:
         self.offsetY = 0
 
 
+    def clear(self):
+        self.tiles = []
+        for _ in range(NB_H_TILE):
+            self.tiles.append([0] * NB_W_TILE)
+
+
     def moveOffset(self, dir: str):
         if dir == 'u':
-            self.offsetY + 1
+            self.offsetY -= 1
         elif dir == 'd':
-            self.offsetY - 1
+            self.offsetY += 1
         elif dir == 'l':
-            self.offsetX + 1
+            self.offsetX -= 1
         elif dir == 'r':
-            self.offsetX - 1
+            self.offsetX += 1
 
         self.offsetX %= NB_W_TILE
         self.offsetY %= NB_H_TILE
@@ -43,6 +47,13 @@ class    Grid:
 
     def switchDrawTileBorder(self):
         self.drawTileBorder = not self.drawTileBorder
+
+
+    def handleMouseClick(self, mousePos: tuple[int], value: int):
+        tileX = (mousePos[0] // self.tileSize) + self.offsetX
+        tileY = (mousePos[1] // self.tileSize) + self.offsetY
+        self.set(tileX, tileY, value)
+
 
     def set(self, x: int, y: int, value: int):
         x %= NB_W_TILE
