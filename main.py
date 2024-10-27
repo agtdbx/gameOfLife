@@ -5,7 +5,7 @@ import sys
 from pygame.math import Vector2 as vec2
 from define import  WIN_W, WIN_H,\
                     MIN_SIMULATION_SLEEP, MAX_SIMULATION_SLEEP, START_SIMULATION_SLEEP,\
-                    SIMULATION_SPEED, FPS_CAP
+                    SIMULATION_SPEED, FPS_CAP, MAX_FPS_CAP
 from grid import    Grid
 
 class Game:
@@ -22,7 +22,7 @@ class Game:
         self.win = pg.display.set_mode(self.winSize, pg.RESIZABLE)
 
         self.clock = pg.time.Clock() # The clock be used to limit our fps
-        self.fps = 0
+        self.fps = MAX_FPS_CAP
 
         self.last = time.time()
 
@@ -36,6 +36,7 @@ class Game:
         self.simulationSleepRemain = 0
 
         self.waitSimulationSpeedChange = 0
+        self.waitFpsPrint = 0
 
 
     def run(self):
@@ -107,13 +108,13 @@ class Game:
 
         # Camera movement
         if self.keyboardState[pg.K_w] or self.keyboardState[pg.K_z]:
-            self.grid.moveOffset('u')
+            self.grid.moveCamera('u', delta)
         elif self.keyboardState[pg.K_s]:
-            self.grid.moveOffset('d')
+            self.grid.moveCamera('d', delta)
         if self.keyboardState[pg.K_a] or self.keyboardState[pg.K_q]:
-            self.grid.moveOffset('l')
+            self.grid.moveCamera('l', delta)
         elif self.keyboardState[pg.K_d]:
-            self.grid.moveOffset('r')
+            self.grid.moveCamera('r', delta)
 
         # Change tile status
         if self.mouseState[0]:
@@ -170,12 +171,17 @@ class Game:
 
         # Fps cap
         if pg.K_f in self.keyDown:
-            if self.fps == 0:
-                self.fps = FPS_CAP
+            if self.fps == FPS_CAP:
+                self.fps = MAX_FPS_CAP
             else:
-                self.fps = 0
+                self.fps = FPS_CAP
 
-        pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
+        # pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
+        if self.waitFpsPrint <= 0:
+            print(f"fps : {self.clock.get_fps():.2f}")
+            self.waitFpsPrint = 1
+        else:
+            self.waitFpsPrint -= delta
 
 
     def render(self):
@@ -201,6 +207,7 @@ class Game:
         sys.exit()
 
 
+print()
 print("COMMANDS :")
 print(" - mouse wheel UP -> zoom in grid")
 print(" - mouse wheel DOWN -> zoom out grid")
@@ -218,6 +225,6 @@ print(" - key UP -> set simulation speed to max")
 print(" - key DOWN -> set simulation speed to min")
 print(" - key R_CTRL -> simulation step")
 print(" - key F -> enable / disable fps cap")
-
+print()
 
 Game().run() # Start game

@@ -1,7 +1,6 @@
 import pygame as pg
 import random
 
-from pygame.math import Vector2 as vec2
 from define import  NB_W_TILE, NB_H_TILE,\
                     MIN_TILE_SIZE, START_TILE_SIZE, MAX_TILE_SIZE, ZOOM_SPEED,\
                     TILE_FILL_COLOR, TILE_EMPTY_COLOR, CAMERA_SPEED,\
@@ -9,56 +8,74 @@ from define import  NB_W_TILE, NB_H_TILE,\
 
 class    Grid:
     def __init__(self) -> None:
-        self.clear()
 
         self.drawTileBorder = True
-        self.tileSize = START_TILE_SIZE
+        self.tileSize = MIN_TILE_SIZE
+        # self.tileSize = START_TILE_SIZE
 
-        self.offsetX = 0
-        self.offsetY = 0
+        self.surface = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
+                                   NB_H_TILE * MIN_TILE_SIZE))
+
+        self.cameraX = 0
+        self.cameraY = 0
+        self.colors = [TILE_EMPTY_COLOR, TILE_FILL_COLOR]
+
+        self.maxCameraX = self.tileSize * NB_W_TILE
+        self.maxCameraY = self.tileSize * NB_H_TILE
+
+        self.clear()
 
 
     def clear(self):
         self.tiles = []
         for _ in range(NB_H_TILE):
             self.tiles.append([0] * NB_W_TILE)
+        self.computeSurface()
 
 
     def addRandomTile(self):
         tileX = random.randint(0, NB_W_TILE - 1)
         tileY = random.randint(0, NB_H_TILE - 1)
         self.tiles[tileY][tileX] = 1
+        self.computeSurface()
 
 
-    def moveOffset(self, dir: str):
+    def moveCamera(self, dir: str, delta: float):
         if dir == 'u':
-            self.offsetY -= CAMERA_SPEED
+            self.cameraY -= CAMERA_SPEED * delta
         elif dir == 'd':
-            self.offsetY += CAMERA_SPEED
+            self.cameraY += CAMERA_SPEED * delta
         elif dir == 'l':
-            self.offsetX -= CAMERA_SPEED
+            self.cameraX -= CAMERA_SPEED * delta
         elif dir == 'r':
-            self.offsetX += CAMERA_SPEED
+            self.cameraX += CAMERA_SPEED * delta
 
-        self.offsetX %= NB_W_TILE
-        self.offsetY %= NB_H_TILE
+        self.cameraX %= self.maxCameraX
+        self.cameraY %= self.maxCameraY
 
 
     def zoomIn(self):
         self.tileSize = max(MIN_TILE_SIZE, self.tileSize - ZOOM_SPEED)
+        self.computeSurface()
+        self.maxCameraX = self.tileSize * NB_W_TILE
+        self.maxCameraY = self.tileSize * NB_H_TILE
 
 
     def zoomOut(self):
         self.tileSize = min(MAX_TILE_SIZE, self.tileSize + ZOOM_SPEED)
+        self.computeSurface()
+        self.maxCameraX = self.tileSize * NB_W_TILE
+        self.maxCameraY = self.tileSize * NB_H_TILE
 
 
     def switchDrawTileBorder(self):
         self.drawTileBorder = not self.drawTileBorder
+        self.computeSurface()
 
 
     def handleMouseClick(self, mousePos: tuple[int], value: int):
-        tileX = (mousePos[0] // self.tileSize) + self.offsetX
-        tileY = (mousePos[1] // self.tileSize) + self.offsetY
+        tileX = (mousePos[0] - int(self.cameraX)) // self.tileSize
+        tileY = (mousePos[1] - int(self.cameraY)) // self.tileSize
         self.set(tileX, tileY, value)
 
 
@@ -67,6 +84,7 @@ class    Grid:
         y %= NB_H_TILE
 
         self.tiles[y][x] = value
+        self.computeTileChange(x, y, value)
 
 
     def get(self, x: int, y: int) -> int:
@@ -77,29 +95,58 @@ class    Grid:
 
 
     def draw(self, win: pg.Surface):
-        colors = [TILE_EMPTY_COLOR, TILE_FILL_COLOR]
+        # Draw top left
+        drawX = self.cameraX - self.maxCameraX
+        drawY = self.cameraY - self.maxCameraY
+        win.blit(self.surface, (drawX, drawY))
 
+        # Draw bottom left
+        drawX = self.cameraX - self.maxCameraX
+        drawY = self.cameraY
+        win.blit(self.surface, (drawX, drawY))
+
+        # Draw top right
+        drawX = self.cameraX
+        drawY = self.cameraY - self.maxCameraY
+        win.blit(self.surface, (drawX, drawY))
+
+        # Draw bottom right
+        drawX = self.cameraX
+        drawY = self.cameraY
+        win.blit(self.surface, (drawX, drawY))
+
+
+    def computeSurface(self):
         for y in range(NB_H_TILE):
             drawY = y * self.tileSize
             drawRY = (y + 1) * self.tileSize
             for x in range(NB_W_TILE):
                 drawX = x * self.tileSize
-                if drawX > WIN_W:
-                    break
 
                 drawRX = (x + 1) * self.tileSize
                 drawRect = (drawX, drawY, self.tileSize, self.tileSize)
 
-                tileStatus = self.get(x + self.offsetX, y + self.offsetY)
+                tileStatus = self.get(x, y)
 
-                pg.draw.rect(win, colors[tileStatus], drawRect)
+                pg.draw.rect(self.surface, self.colors[tileStatus], drawRect)
                 if self.drawTileBorder:
                     tileStatus = not tileStatus
-                    pg.draw.line(win, colors[tileStatus], (drawX, drawY), (drawRX, drawY))
-                    pg.draw.line(win, colors[tileStatus], (drawX, drawY), (drawX, drawRY))
+                    pg.draw.line(self.surface, self.colors[tileStatus], (drawX, drawY), (drawRX, drawY))
+                    pg.draw.line(self.surface, self.colors[tileStatus], (drawX, drawY), (drawX, drawRY))
 
-            if drawY > WIN_H:
-                break
+
+    def computeTileChange(self, x: int, y: int, value: int):
+        drawX = x * self.tileSize
+        drawRX = (x + 1) * self.tileSize
+        drawY = y * self.tileSize
+        drawRY = (y + 1) * self.tileSize
+        drawRect = (drawX, drawY, self.tileSize, self.tileSize)
+
+        pg.draw.rect(self.surface, self.colors[value], drawRect)
+        if self.drawTileBorder:
+            value = not value
+            pg.draw.line(self.surface, self.colors[value], (drawX, drawY), (drawRX, drawY))
+            pg.draw.line(self.surface, self.colors[value], (drawX, drawY), (drawX, drawRY))
 
 
     def simulateStep(self):
@@ -138,3 +185,4 @@ class    Grid:
         # Apply changes
         for x, y, value in changes:
             self.tiles[y][x] = value
+            self.computeTileChange(x, y, value)
