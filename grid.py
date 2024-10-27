@@ -1,4 +1,5 @@
 import pygame as pg
+import random
 
 from pygame.math import Vector2 as vec2
 from define import  NB_W_TILE, NB_H_TILE,\
@@ -21,6 +22,12 @@ class    Grid:
         self.tiles = []
         for _ in range(NB_H_TILE):
             self.tiles.append([0] * NB_W_TILE)
+
+
+    def addRandomTile(self):
+        tileX = random.randint(0, NB_W_TILE - 1)
+        tileY = random.randint(0, NB_H_TILE - 1)
+        self.tiles[tileY][tileX] = 1
 
 
     def moveOffset(self, dir: str):

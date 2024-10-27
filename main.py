@@ -5,7 +5,7 @@ import sys
 from pygame.math import Vector2 as vec2
 from define import  WIN_W, WIN_H,\
                     MIN_SIMULATION_SLEEP, MAX_SIMULATION_SLEEP, START_SIMULATION_SLEEP,\
-                    SIMULATION_SPEED
+                    SIMULATION_SPEED, FPS_CAP
 from grid import    Grid
 
 class Game:
@@ -122,8 +122,13 @@ class Game:
         elif self.mouseState[2]:
             self.grid.handleMouseClick(self.mousePos, 0)
 
+        # Clear grid
         if self.keyboardState[pg.K_c]:
             self.grid.clear()
+
+        # Add tile at random position
+        if self.keyboardState[pg.K_r]:
+            self.grid.addRandomTile()
 
         # Change simulation run status
         if pg.K_SPACE in self.keyDown:
@@ -163,6 +168,13 @@ class Game:
         elif pg.K_RCTRL in self.keyDown:
             self.grid.simulateStep()
 
+        # Fps cap
+        if pg.K_f in self.keyDown:
+            if self.fps == 0:
+                self.fps = FPS_CAP
+            else:
+                self.fps = 0
+
         pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
 
 
@@ -198,12 +210,14 @@ print(" - key S -> move grid up")
 print(" - key A/Q -> move grid right")
 print(" - key D -> move grid left")
 print(" - key C -> clear grid")
+print(" - key R -> add tile at random position")
 print(" - key SPACE -> start/stop simulation")
 print(" - key LEFT -> increase simulation speed")
 print(" - key RIGHT -> decrease simulation speed")
 print(" - key UP -> set simulation speed to max")
 print(" - key DOWN -> set simulation speed to min")
-print(" - key S -> simulation step")
+print(" - key R_CTRL -> simulation step")
+print(" - key F -> enable / disable fps cap")
 
 
 Game().run() # Start game
