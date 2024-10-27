@@ -13,8 +13,14 @@ class    Grid:
         self.tileSize = MIN_TILE_SIZE
         # self.tileSize = START_TILE_SIZE
 
-        self.surface = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
-                                   NB_H_TILE * MIN_TILE_SIZE))
+        self.surfaceUL = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
+                                     NB_H_TILE * MIN_TILE_SIZE))
+        self.surfaceDL = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
+                                     NB_H_TILE * MIN_TILE_SIZE))
+        self.surfaceUR = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
+                                     NB_H_TILE * MIN_TILE_SIZE))
+        self.surfaceDR = pg.Surface((NB_W_TILE * MIN_TILE_SIZE,
+                                     NB_H_TILE * MIN_TILE_SIZE))
 
         self.cameraX = 0
         self.cameraY = 0
@@ -22,8 +28,8 @@ class    Grid:
 
         self.maxCameraX = self.tileSize * NB_W_TILE
         self.maxCameraY = self.tileSize * NB_H_TILE
-        self.absoluteMaxCameraX = self.tileSize * NB_W_TILE
-        self.absoluteMaxCameraY = self.tileSize * NB_H_TILE
+        self.absoluteMaxCameraX = NB_W_TILE * MIN_TILE_SIZE
+        self.absoluteMaxCameraY = NB_H_TILE * MIN_TILE_SIZE
 
         self.clear()
 
@@ -100,41 +106,51 @@ class    Grid:
         # Draw top left
         drawX = self.cameraX - self.absoluteMaxCameraX
         drawY = self.cameraY - self.absoluteMaxCameraY
-        win.blit(self.surface, (drawX, drawY))
+        win.blit(self.surfaceUR, (drawX, drawY))
 
         # Draw bottom left
         drawX = self.cameraX - self.absoluteMaxCameraX
         drawY = self.cameraY
-        win.blit(self.surface, (drawX, drawY))
+        win.blit(self.surfaceDL, (drawX, drawY))
 
         # Draw top right
         drawX = self.cameraX
         drawY = self.cameraY - self.absoluteMaxCameraY
-        win.blit(self.surface, (drawX, drawY))
+        win.blit(self.surfaceUR, (drawX, drawY))
 
         # Draw bottom right
         drawX = self.cameraX
         drawY = self.cameraY
-        win.blit(self.surface, (drawX, drawY))
+        win.blit(self.surfaceDR, (drawX, drawY))
 
 
     def computeSurface(self):
+        # TODO: Compute up left surface
+        # TODO: Compute down left surface
+        # TODO: Compute up right surface
+
+        # Compute down right surface
         for y in range(NB_H_TILE):
             drawY = y * self.tileSize
+            if drawY > self.absoluteMaxCameraY:
+                break
             drawRY = (y + 1) * self.tileSize
+
             for x in range(NB_W_TILE):
                 drawX = x * self.tileSize
+                if drawX > self.absoluteMaxCameraX:
+                    break
 
                 drawRX = (x + 1) * self.tileSize
                 drawRect = (drawX, drawY, self.tileSize, self.tileSize)
 
                 tileStatus = self.get(x, y)
 
-                pg.draw.rect(self.surface, self.colors[tileStatus], drawRect)
+                pg.draw.rect(self.surfaceDR, self.colors[tileStatus], drawRect)
                 if self.drawTileBorder:
                     tileStatus = not tileStatus
-                    pg.draw.line(self.surface, self.colors[tileStatus], (drawX, drawY), (drawRX, drawY))
-                    pg.draw.line(self.surface, self.colors[tileStatus], (drawX, drawY), (drawX, drawRY))
+                    pg.draw.line(self.surfaceDR, self.colors[tileStatus], (drawX, drawY), (drawRX, drawY))
+                    pg.draw.line(self.surfaceDR, self.colors[tileStatus], (drawX, drawY), (drawX, drawRY))
 
 
     def computeTileChange(self, x: int, y: int, value: int):
@@ -144,11 +160,11 @@ class    Grid:
         drawRY = (y + 1) * self.tileSize
         drawRect = (drawX, drawY, self.tileSize, self.tileSize)
 
-        pg.draw.rect(self.surface, self.colors[value], drawRect)
+        pg.draw.rect(self.surfaceDR, self.colors[value], drawRect)
         if self.drawTileBorder:
             value = not value
-            pg.draw.line(self.surface, self.colors[value], (drawX, drawY), (drawRX, drawY))
-            pg.draw.line(self.surface, self.colors[value], (drawX, drawY), (drawX, drawRY))
+            pg.draw.line(self.surfaceDR, self.colors[value], (drawX, drawY), (drawRX, drawY))
+            pg.draw.line(self.surfaceDR, self.colors[value], (drawX, drawY), (drawX, drawRY))
 
 
     def simulateStep(self):
