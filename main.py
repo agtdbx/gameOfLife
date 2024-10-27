@@ -22,7 +22,7 @@ class Game:
         self.win = pg.display.set_mode(self.winSize, pg.RESIZABLE)
 
         self.clock = pg.time.Clock() # The clock be used to limit our fps
-        self.fps = MAX_FPS_CAP
+        self.fps = FPS_CAP
 
         self.last = time.time()
 
@@ -37,6 +37,8 @@ class Game:
 
         self.waitSimulationSpeedChange = 0
         self.waitFpsPrint = 0
+
+        pg.display.set_caption("Game of Life")
 
 
     def run(self):
@@ -176,13 +178,6 @@ class Game:
             else:
                 self.fps = FPS_CAP
 
-        # pg.display.set_caption(f"fps : {self.clock.get_fps():.2f}")
-        if self.waitFpsPrint <= 0:
-            print(f"fps : {self.clock.get_fps():.2f}")
-            self.waitFpsPrint = 1
-        else:
-            self.waitFpsPrint -= delta
-
 
     def render(self):
         """
@@ -219,8 +214,8 @@ print(" - key D -> move grid left")
 print(" - key C -> clear grid")
 print(" - key R -> add tile at random position")
 print(" - key SPACE -> start/stop simulation")
-print(" - key LEFT -> increase simulation speed")
-print(" - key RIGHT -> decrease simulation speed")
+print(" - key LEFT -> decrease simulation speed")
+print(" - key RIGHT -> increase simulation speed")
 print(" - key UP -> set simulation speed to max")
 print(" - key DOWN -> set simulation speed to min")
 print(" - key R_CTRL -> simulation step")
