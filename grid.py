@@ -22,6 +22,8 @@ class    Grid:
 
         self.maxCameraX = self.tileSize * NB_W_TILE
         self.maxCameraY = self.tileSize * NB_H_TILE
+        self.absoluteMaxCameraX = self.tileSize * NB_W_TILE
+        self.absoluteMaxCameraY = self.tileSize * NB_H_TILE
 
         self.clear()
 
@@ -42,13 +44,13 @@ class    Grid:
 
     def moveCamera(self, dir: str, delta: float):
         if dir == 'u':
-            self.cameraY -= CAMERA_SPEED * delta
-        elif dir == 'd':
             self.cameraY += CAMERA_SPEED * delta
+        elif dir == 'd':
+            self.cameraY -= CAMERA_SPEED * delta
         elif dir == 'l':
-            self.cameraX -= CAMERA_SPEED * delta
-        elif dir == 'r':
             self.cameraX += CAMERA_SPEED * delta
+        elif dir == 'r':
+            self.cameraX -= CAMERA_SPEED * delta
 
         self.cameraX %= self.maxCameraX
         self.cameraY %= self.maxCameraY
@@ -96,18 +98,18 @@ class    Grid:
 
     def draw(self, win: pg.Surface):
         # Draw top left
-        drawX = self.cameraX - self.maxCameraX
-        drawY = self.cameraY - self.maxCameraY
+        drawX = self.cameraX - self.absoluteMaxCameraX
+        drawY = self.cameraY - self.absoluteMaxCameraY
         win.blit(self.surface, (drawX, drawY))
 
         # Draw bottom left
-        drawX = self.cameraX - self.maxCameraX
+        drawX = self.cameraX - self.absoluteMaxCameraX
         drawY = self.cameraY
         win.blit(self.surface, (drawX, drawY))
 
         # Draw top right
         drawX = self.cameraX
-        drawY = self.cameraY - self.maxCameraY
+        drawY = self.cameraY - self.absoluteMaxCameraY
         win.blit(self.surface, (drawX, drawY))
 
         # Draw bottom right
